@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quiz – Mémoire & Expérience Client</title>
+
+  <style>
+    :root{
+      --bg:#05050a;
+      --card:rgba(10,10,18,.62);
+      --border:rgba(255,255,255,.14);
+      --text:rgba(255,255,255,.94);
+      --muted:rgba(255,255,255,.78);
+      --accent:#b44cff;
+      --accent2:#7a2cff;
+      --danger:#ff3b3b;
+      --ok:#22d38a;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      overflow:hidden;
+    }
+
+    #matrix{position:fixed;inset:0;z-index:0}
+    .overlay{
+      position:fixed;inset:0;
+      background:radial-gradient(rgba(0,0,0,.35),rgba(0,0,0,.75));
+      z-index:1
+    }
+
+    .wrap{
+      position:relative;z-index:2;
+      height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+    }
+
+    .card{
+      width:min(560px,92vw);
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:18px 16px;
+      backdrop-filter:blur(10px);
+      -webkit-backdrop-filter:blur(10px);
+    }
+
+    h1{
+      margin:0 0 10px;
+      font-size:18px;
+      line-height:1.35;
+    }
+
+    .subtitle{
+      margin:0 0 12px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.45;
+    }
+
+    .options{display:grid;gap:10px}
+
+    .option{
+      display:flex;gap:10px;
+      padding:12px;
+      border-radius:14px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.06);
+      cursor:pointer;
+      user-select:none;
+      transition: transform .08s ease, border-color .12s ease, background .12s ease;
+    }
+    .option:hover{
+      transform: translateY(-1px);
+      border-color: rgba(180,76,255,.45);
+      background: rgba(180,76,255,.08);
+    }
+
+    .option input{accent-color:var(--accent); margin-top:2px}
+
+    .actions{
+      display:flex;gap:10px;margin-top:14px;flex-wrap:wrap
+    }
+
+    button{
+      border:0;border-radius:12px;
+      padding:12px 14px;
+      font-weight:700;
+      cursor:pointer;
+      transition: transform .08s ease, filter .12s ease;
+      font-size:14px;
+    }
+    button:active{transform:scale(.99)}
+
+    .primary{
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      color:#0b0612;
+    }
+
+    .ghost{
+      background:rgba(255,255,255,.08);
+      color:var(--text);
+      border:1px solid var(--border);
+    }
+    .ghost:hover{filter:brightness(1.08)}
+
+    .feedback{
+      display:none;
+      margin-top:14px;
+      padding:12px;
+      border-radius:14px;
+      background:rgba(0,0,0,.25);
+      border:1px dashed var(--border);
+    }
+
+    .good{color:var(--ok);font-weight:800}
+    .bad{color:var(--danger);font-weight:800}
+
+    .why{
+      margin-top:8px;
+      padding:10px;
+      border-radius:12px;
+      background:rgba(180,76,255,.08);
+      border:1px solid rgba(180,76,255,.3);
+      display:none;
+      line-height:1.45;
+    }
+
+    .fade{animation:fade .2s ease}
+    @keyframes fade{
+      from{opacity:0;transform:translateY(4px)}
+      to{opacity:1;transform:translateY(0)}
+    }
+
+    @media (max-width:420px){
+      .card{padding:16px 14px;border-radius:16px}
+      h1{font-size:17px}
+      button{width:100%}
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="matrix" aria-hidden="true"></canvas>
+  <div class="overlay" aria-hidden="true"></div>
+
+  <div class="wrap">
+    <div class="card" role="group" aria-label="Quiz mémoire expérience client">
+      <h1>Selon les principes neuroscientifiques, qu’est-ce qu’un hôte retiendra le plus après son séjour ?</h1>
+      <p class="subtitle">Choisissez une réponse puis validez.</p>
+
+      <form id="quiz" autocomplete="off">
+        <div class="options" aria-label="Choix de réponses">
+          <label class="option">
+            <input type="radio" name="q" value="A">
+            <div>A. La moyenne de toutes les interactions vécues</div>
+          </label>
+
+          <label class="option">
+            <input type="radio" name="q" value="B">
+            <div>B. Le nombre de services utilisés</div>
+          </label>
+
+          <label class="option">
+            <input type="radio" name="q" value="C">
+            <div>C. Le moment le plus émotionnel et la fin de l’expérience</div>
+          </label>
+
+          <label class="option">
+            <input type="radio" name="q" value="D">
+            <div>D. Les efforts internes réalisés par les équipes</div>
+          </label>
+        </div>
+
+        <div class="actions">
+          <button class="primary" type="submit">Valider</button>
+          <button class="ghost" type="button" id="reset">Réinitialiser</button>
+        </div>
+
+        <div class="feedback fade" id="feedback" aria-live="polite">
+          <div id="result"></div>
+          <div class="why" id="why">
+            La mémoire fonctionne selon l’effet <strong>peak-end</strong> :<br>
+            le cerveau retient surtout le pic émotionnel et la dernière impression.
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // QUIZ LOGIC
+    const quiz = document.getElementById("quiz");
+    const feedback = document.getElementById("feedback");
+    const result = document.getElementById("result");
+    const why = document.getElementById("why");
+    const reset = document.getElementById("reset");
+
+    const correct = "C";
+
+    quiz.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const checked = quiz.querySelector("input[name=q]:checked");
+
+      feedback.style.display = "block";
+      why.style.display = "none";
+
+      if (!checked){
+        result.innerHTML = "<span class='bad'>Veuillez sélectionner une réponse.</span>";
+        return;
+      }
+
+      if (checked.value === correct){
+        result.innerHTML = "<span class='good'>✅ Bonne réponse.</span>";
+        why.style.display = "block";
+      } else {
+        result.innerHTML = "<span class='bad'>Mauvaise réponse.</span>";
+      }
+    });
+
+    reset.addEventListener("click", () => {
+      quiz.reset();
+      feedback.style.display = "none";
+      why.style.display = "none";
+      result.innerHTML = "";
+    });
+
+    // MATRIX PURPLE BACKGROUND (local, performant)
+    const c = document.getElementById("matrix");
+    const ctx = c.getContext("2d");
+    const chars = "01ABCDEFGHIJKLMNOPQRSTUVWXYZ#$%&*";
+    let font = 16, drops = [];
+
+    function resize(){
+      const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      c.width = Math.floor(innerWidth * dpr);
+      c.height = Math.floor(innerHeight * dpr);
+      c.style.width = innerWidth + "px";
+      c.style.height = innerHeight + "px";
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+
+      font = innerWidth < 420 ? 14 : 16;
+      drops = Array(Math.floor(innerWidth / font)).fill(1).map(() => (Math.random() * 20) | 0);
+    }
+    resize();
+    window.addEventListener("resize", resize, { passive:true });
+    window.addEventListener("orientationchange", resize, { passive:true });
+
+    let last = 0;
+    const fpsCap = 30;
+    const frameInterval = 1000 / fpsCap;
+
+    function draw(t){
+      if (!last) last = t;
+      const dt = t - last;
+      if (dt < frameInterval){ requestAnimationFrame(draw); return; }
+      last = t;
+
+      ctx.fillStyle = "rgba(5,5,10,.12)";
+      ctx.fillRect(0,0,innerWidth,innerHeight);
+
+      ctx.font = font + "px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace";
+
+      for (let i=0;i<drops.length;i++){
+        const ch = chars[(Math.random()*chars.length)|0];
+        const x = i * font;
+        const y = drops[i] * font;
+
+        const head = Math.random() > 0.92;
+        ctx.fillStyle = head ? "rgba(210,170,255,.95)" : "rgba(180,76,255,.78)";
+        ctx.shadowColor = "rgba(180,76,255,.55)";
+        ctx.shadowBlur = head ? 12 : 6;
+
+        ctx.fillText(ch, x, y);
+
+        if (y > innerHeight && Math.random() > 0.975) drops[i] = 0;
+        else drops[i] += 1;
+      }
+
+      ctx.shadowBlur = 0;
+      requestAnimationFrame(draw);
+    }
+    requestAnimationFrame(draw);
+  </script>
+</body>
+</html>
